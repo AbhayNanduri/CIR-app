@@ -1,0 +1,58 @@
+<%- include('_header') %>
+
+<h1>Student Analytics</h1>
+
+<div>
+  <canvas id="scoreChart"></canvas>
+</div>
+
+<div>
+  <canvas id="placementChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Score comparison chart
+  const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+  new Chart(scoreCtx, {
+    type: 'bar',
+    data: {
+      labels: ['DSA', 'Web Development', 'React'],
+      datasets: [{
+        label: 'Average Scores',
+        data: [
+          <%= subjectScores.dsa.reduce((a, b) => a + b, 0) / subjectScores.dsa.length %>,
+          <%= subjectScores.webdev.reduce((a, b) => a + b, 0) / subjectScores.webdev.length %>,
+          <%= subjectScores.react.reduce((a, b) => a + b, 0) / subjectScores.react.length %>
+        ],
+        backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)'],
+        borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // Placement status pie chart
+  const placementCtx = document.getElementById('placementChart').getContext('2d');
+  new Chart(placementCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Placed', 'Not Placed'],
+      datasets: [{
+        data: [<%= placementStatus['Placed'] %>, <%= placementStatus['Not placed'] %>],
+        backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+        borderWidth: 1
+      }]
+    }
+  });
+</script>
+
+<%- include('_footer') %>

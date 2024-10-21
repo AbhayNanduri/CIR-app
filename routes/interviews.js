@@ -10,5 +10,6 @@ router.post("/create", interviewController.create);
 router.post("/enroll-in-interview/:id", interviewController.enrollInInterview);
 
 router.get("/deallocate/:studentId/:interviewId", interviewController.deallocate);
+router.get('/interview/destroy/:interviewId', interviewController.destroy);
 
 module.exports = router;

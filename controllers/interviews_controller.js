@@ -133,3 +133,42 @@ module.exports.deallocate = async (req, res) => {
     req.flash("error", "Couldn't deallocate from interview");
   }
 };
+
+// const Interview = require("../models/interview");
+//const Student = require("../models/student");
+
+module.exports.destroy = async (req, res) => {
+  try {
+    const { interviewId } = req.params;
+
+    // Find the interview
+    const interview = await Interview.findById(interviewId);
+    if (!interview) {
+      req.flash("error", "Couldn't find interview");
+      return res.redirect("back");
+    }
+
+    const studentsEnrolled = interview.students;
+
+    // Remove reference of this interview from all enrolled students
+    if (studentsEnrolled.length > 0) {
+      await Promise.all(studentsEnrolled.map(async (enrolled) => {
+        await Student.findByIdAndUpdate(
+          enrolled.student,
+          { $pull: { interviews: { company: interview.company } } }
+        );
+      }));
+    }
+
+    // Remove the interview itself
+    await interview.remove();
+
+    req.flash("success", `Interview with ${interview.company} deleted!`);
+  } catch (err) {
+    console.error("Error deleting interview:", err);
+    req.flash("error", "Couldn't delete interview");
+  }
+  return res.redirect("back");
+};
+
+

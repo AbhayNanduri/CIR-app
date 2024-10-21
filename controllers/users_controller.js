@@ -56,41 +56,105 @@ module.exports.signUp = (req, res) => {
   });
 };
 
-// get Sign Up data
+// // get Sign Up data
+// module.exports.create = async (req, res) => {
+//   try {
+//     const { username, email, password, confirm_password } = req.body;
+
+//     // if password doesn't match
+//     if (password != confirm_password) {
+//       req.flash("error", "Password and Confirm password are not same");
+//       return res.redirect("back");
+//     }
+
+//     // check if user already exist
+//     User.findOne({ email }, async (err, user) => {
+//       if (err) {
+//         console.log("Error in finding user in signing up");
+//         return;
+//       }
+
+//       if (!user) {
+//         await User.create(
+//           {
+//             email,
+//             password,
+//             username,
+//           },
+//           (err, user) => {
+//             if (err) {
+//               req.flash("error", "Couldn't sign Up");
+//             }
+//             req.flash("success", "Account created!");
+//             return res.redirect("/");
+//           }
+//         );
+//       } else {
+//         req.flash("error", "Email already registed!");
+//         return res.redirect("back");
+//       }
+//     });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const sgTransport = require('nodemailer-sendgrid');
+
+// Set up nodemailer for SendGrid
+const transporter = nodemailer.createTransport(sgTransport({
+  auth: {
+    api_key: 'YOUR_SENDGRID_API_KEY' // Replace with your actual SendGrid API key
+  }
+}));
+
 module.exports.create = async (req, res) => {
   try {
     const { username, email, password, confirm_password } = req.body;
 
     // if password doesn't match
     if (password != confirm_password) {
-      req.flash("error", "Password and Confirm password are not same");
+      req.flash("error", "Password and Confirm password are not the same.");
       return res.redirect("back");
     }
 
-    // check if user already exist
+    // check if user already exists
     User.findOne({ email }, async (err, user) => {
       if (err) {
-        console.log("Error in finding user in signing up");
+        console.log("Error in finding user during sign-up.");
         return;
       }
 
       if (!user) {
-        await User.create(
-          {
-            email,
-            password,
-            username,
-          },
-          (err, user) => {
-            if (err) {
-              req.flash("error", "Couldn't sign Up");
-            }
-            req.flash("success", "Account created!");
-            return res.redirect("/");
+        // Generate a random OTP
+        const otp = crypto.randomInt(100000, 999999).toString();
+
+        // Store user data and OTP temporarily in session or database
+        req.session.tempUser = { username, email, password, otp };
+
+        // Send OTP to user's email using SendGrid
+        const mailOptions = {
+          from: 'otp-handler@yourdomain.com',  // Use your verified domain email
+          to: email,  // this takes the user's typed email as the 'to' address
+          subject: 'Your OTP for Sign-Up',
+          text: `Your OTP for signing up is: ${otp}`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.log('Error sending OTP: ', error);
+            req.flash('error', 'Error sending OTP, please try again.');
+            return res.redirect('back');
+          } else {
+            console.log('OTP sent: ' + info.response);
+            req.flash('success', 'OTP sent to your email. Please verify.');
+            return res.redirect('/verify-otp');
           }
-        );
+        });
       } else {
-        req.flash("error", "Email already registed!");
+        req.flash("error", "Email already registered!");
         return res.redirect("back");
       }
     });
@@ -98,6 +162,7 @@ module.exports.create = async (req, res) => {
     console.log(err);
   }
 };
+
 
 // sign in and create a session for the user
 module.exports.createSession = (req, res) => {

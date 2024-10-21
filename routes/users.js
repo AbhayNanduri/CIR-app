@@ -5,10 +5,12 @@ const router = express.Router();
 const { downloadCSVReport } = require("../controllers/csv_controller");
 const usersController = require("../controllers/users_controller");
 const dashboardController = require("../controllers/dashboard_controller");
+const analyticsController = require("../controllers/analytics_controller");
 
 router.get("/profile", passport.checkAuthentication, usersController.profile);
 router.post("/update", passport.checkAuthentication, usersController.update);
 
+router.get("/analytics", analyticsController.showAnalytics);
 router.get("/", usersController.signIn);
 router.get("/sign-up", usersController.signUp);
 router.get("/dashboard", dashboardController.dashboard);

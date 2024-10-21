@@ -74,3 +74,5 @@ app.listen(PORT || 5000, (err) => {
   }
   console.log(`server is running on port: ${PORT}`);
 });
+
+app.use(express.static('public'));
